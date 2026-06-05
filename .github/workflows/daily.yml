@@ -1,0 +1,47 @@
+name: Dnevni cjenici
+
+# Pokrece se svaki dan i osvjezi data/processed/usporedba.csv.
+# Streamlit Community Cloud gleda repo i automatski se redeploya na novi commit.
+on:
+  schedule:
+    - cron: "0 6 * * *"   # 06:00 UTC = 08:00 po HR (datum je tada sigurno tocan)
+  workflow_dispatch: {}    # omogucuje rucno pokretanje iz GitHub UI-ja
+
+permissions:
+  contents: write          # workflow smije commitati rezultat natrag u repo
+
+# Sprijeci preklapanje ako se dva pokretanja poklope
+concurrency:
+  group: dnevni-cjenici
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Postavi Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instaliraj ovisnosti
+        run: pip install -r requirements.txt
+
+      - name: Pokreni pipeline
+        run: python src/pipeline.py
+
+      - name: Commitaj rezultat (ako ima promjena)
+        run: |
+          git config user.name  "cjeniki-bot"
+          git config user.email "cjeniki-bot@users.noreply.github.com"
+          git add data/processed/usporedba.csv
+          if git diff --staged --quiet; then
+            echo "Nema promjena u usporedba.csv — preskacem commit."
+          else
+            git commit -m "Dnevni cjenik $(date -u +%F)"
+            git push
+          fi

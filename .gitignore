@@ -1,0 +1,7 @@
+data/raw/*.csv
+data/processed/*.csv
+# ali rezultat MORA u repo — Streamlit Cloud i GitHub Actions ga citaju/osvjezavaju
+!data/processed/usporedba.csv
+__pycache__/
+*.pyc
+.venv/
