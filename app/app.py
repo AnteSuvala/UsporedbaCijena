@@ -1,7 +1,4 @@
-"""
-app.py — Usporedba cijena Spar vs Kaufland
-Pokretanje: streamlit run app/app.py
-"""
+# Streamlit tražilica za usporedbu cijena. Pokretanje: streamlit run app/app.py
 
 import os
 import re
@@ -14,8 +11,8 @@ from rapidfuzz import fuzz
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data/processed/usporedba.csv")
 
-# Spar naziv se vise ne prikazuje (Kaufland nazivi izgledaju urednije);
-# spajanje i dalje ide po barkodu pa je redak isti proizvod u oba lanca.
+# Spar naziv ne prikazujem jer su Kaufland nazivi uredniji; redak je svejedno
+# isti proizvod jer je spojen po barkodu.
 DISPLAY_COLS = [
     "naziv_kaufland",
     "cijena_spar", "cijena_kaufland",
@@ -40,8 +37,7 @@ SORT_MAP = {
 
 
 def _fold(s: str) -> str:
-    """Mala/velika slova + makni dijakritiku: 'Čokolada' -> 'cokolada'.
-    Tako 'cokolada' nadje 'Čokolada', a 'milka' tocno 'Milka'."""
+    # mala slova + makni dijakritiku da 'cokolada' nade 'Čokolada'
     s = unicodedata.normalize("NFKD", str(s))
     s = "".join(c for c in s if not unicodedata.combining(c))
     s = s.replace("đ", "d").replace("Đ", "d")
@@ -65,7 +61,6 @@ if not os.path.exists(DATA):
 
 df = load()
 
-# ── filteri ────────────────────────────────────────────────────────────────────
 col1, col2, col3 = st.columns([3, 1, 1])
 with col1:
     q = st.text_input("Pretraži proizvod:", placeholder="npr. jogurt, čokolada, kruh...")
@@ -74,21 +69,19 @@ with col2:
 with col3:
     sort_by = st.selectbox("Sortiraj po:", list(SORT_MAP.keys()))
 
-# ── filtriranje ────────────────────────────────────────────────────────────────
 result = df.copy()
 
 if q:
     names = (result["naziv_kaufland"].fillna("") + " " + result["naziv_spar"].fillna("")).map(_fold)
     tokens = [_fold(t) for t in q.split() if t.strip()]
 
-    # 1) Doslovni pogodak: SVE rijeci iz upita moraju se pojaviti u nazivu
-    #    (bilo kojim redom). Ovo je ono sto korisnik ocekuje od trazilice.
+    # sve rijeci iz upita moraju se pojaviti u nazivu (bilo kojim redom)
     mask = pd.Series(True, index=names.index)
     for t in tokens:
         mask &= names.str.contains(re.escape(t), na=False)
     result = result[mask]
 
-    # 2) Ako doslovno nema nista (npr. tipfeler), fuzzy fallback s visokim pragom.
+    # ako doslovno nema pogodka (npr. tipfeler), probam fuzzy
     if result.empty:
         qf = _fold(q)
         scores = names.map(lambda s: fuzz.partial_ratio(qf, s))
@@ -100,14 +93,11 @@ if filter_store != "Svi":
 sort_col, asc = SORT_MAP[sort_by]
 result = result.sort_values(sort_col, ascending=asc, na_position="last")
 
-# ── metrike ────────────────────────────────────────────────────────────────────
 m1, m2, m3, m4 = st.columns(4)
 spar_cheaper = (result["jeftiniji"] == "spar").sum()
 kauf_cheaper = (result["jeftiniji"] == "kaufland").sum()
 
-# Predznak: razlika_eur = cijena_spar - cijena_kaufland.
-#   > 0  -> Spar skuplji  -> Kaufland u prosjeku jeftiniji
-#   < 0  -> Kaufland skuplji -> Spar u prosjeku jeftiniji
+# razlika_eur = cijena_spar - cijena_kaufland (pozitivno -> Kaufland jeftiniji)
 avg_eur = result["razlika_eur"].mean()
 
 m1.metric("Prikazano", f"{len(result)}")
@@ -125,12 +115,8 @@ elif avg_eur < 0:
 else:
     m4.metric("Prosj. jeftiniji", "Izjednačeno", delta="0.00 €", delta_color="off")
 
-# ── tablica ────────────────────────────────────────────────────────────────────
-# Prikazujemo najvise MAX_REDAKA (vec sortirano) i renderamo kao STATICNU HTML
-# tablicu umjesto st.dataframe. st.dataframe ima vlastiti unutarnji scroll/canvas
-# koji na nekim mobitelima lose renderira i zna "zaostati" za stranicom; staticna
-# tablica prirodno tece sa stranicom, a horizontalni scroll na uskim ekranima
-# ostaje unutar samog bloka tablice.
+# Prikazujem prvih MAX_REDAKA kao obicnu HTML tablicu jer se st.dataframe
+# na mobitelu zna lose ponasati zbog svog internog scrolla.
 MAX_REDAKA = 300
 
 show = [c for c in DISPLAY_COLS if c in result.columns]
@@ -164,7 +150,6 @@ st.markdown(
         white-space: nowrap;
       }
       table.cjenik th { text-align: left; font-weight: 600; }
-      /* naziv lijevo, brojcani stupci desno */
       table.cjenik td:not(:first-child), table.cjenik th:not(:first-child) { text-align: right; }
       table.cjenik tr:hover td { background: rgba(128,128,128,0.08); }
     </style>

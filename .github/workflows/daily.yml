@@ -4,7 +4,7 @@ name: Dnevni cjenici
 # Streamlit Community Cloud gleda repo i automatski se redeploya na novi commit.
 on:
   schedule:
-    - cron: "0 6 * * *"   # 06:00 UTC = 08:00 po HR (datum je tada sigurno tocan)
+    - cron: "23 6 * * *"   # 06:23 UTC = 08:23 po HR; namjerno van punog sata jer GitHub preskace zakazane jobove na :00
   workflow_dispatch: {}    # omogucuje rucno pokretanje iz GitHub UI-ja
 
 permissions:

@@ -1,29 +1,20 @@
-"""
-sources.py
------------
-Konfiguracija po lancu trgovina.
+# Postavke za svaki lanac trgovina.
+# Svaki lanac ima svoj format CSV-a (encoding, separator, nazivi stupaca),
+# pa ovdje opisujem kako se njihovi stupci preslikavaju u nasu zajednicku shemu.
 
-Svaki lanac objavljuje CSV u svom formatu (drugi encoding, separator,
-nazivi stupaca). Ovdje na JEDNOM mjestu opisujemo kako svaki izgleda i
-kako se njegovi stupci mapiraju u nasu ZAJEDNICKU shemu.
-
-Dodavanje treceg lanca = samo novi unos u SOURCES. Ostatak koda se ne mijenja.
-"""
-
-# Zajednicka (ciljana) shema u koju normaliziramo sve lance.
-# Redoslijed = redoslijed stupaca u izlaznoj tablici.
+# Stupci koje koristimo nakon normalizacije (i njihov redoslijed).
 COMMON_COLUMNS = [
-    "barkod",            # primarni kljuc za spajanje izmedu trgovina
+    "barkod",            # kljuc za spajanje dvaju lanaca
     "naziv",
     "marka",
     "neto_kolicina",
     "jedinica_mjere",
-    "cijena",            # redovna MPC u EUR
-    "cijena_po_jm",      # cijena po jedinici mjere (EUR)
-    "akcijska_cijena",   # ako postoji
-    "najniza_30d",       # najniza cijena u 30 dana
+    "cijena",
+    "cijena_po_jm",
+    "akcijska_cijena",
+    "najniza_30d",
     "kategorija",
-    "lanac",             # "Spar" / "Kaufland" (dodaje se automatski)
+    "lanac",
 ]
 
 SOURCES = {
@@ -31,7 +22,7 @@ SOURCES = {
         "lanac": "Kaufland",
         "encoding": "utf-8",
         "sep": "\t",
-        # mapiranje: kljuc = nas zajednicki stupac, vrijednost = naziv u njihovom CSV-u
+        # kljuc = nas stupac, vrijednost = naziv u njihovom CSV-u
         "columns": {
             "barkod": "barkod",
             "naziv": "naziv proizvoda",

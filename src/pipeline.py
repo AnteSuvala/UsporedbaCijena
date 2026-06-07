@@ -1,16 +1,3 @@
-"""
-pipeline.py
-------------
-Spaja sve u jedan tok:
-    normaliziraj Spar  ->
-    normaliziraj Kaufland  ->
-    spoji po barkodu  ->
-    spremi data/processed/usporedba.csv
-
-Pokretanje:
-    cd src && python pipeline.py
-"""
-
 import os
 import sys
 import pandas as pd
@@ -18,7 +5,7 @@ from normalize import normalize
 from match import match_by_barcode
 from fetch import fetch_today
 
-# Windows terminal cesto ne podrzava UTF-8; postavi fallback da ne puca na dijakritici
+# da Windows konzola ne puca na dijakritici
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
@@ -27,22 +14,18 @@ OUTPUT = os.path.join(ROOT, "data/processed/usporedba.csv")
 
 
 def _keep_existing(razlog: str) -> None:
-    """
-    Kad dnevni podaci nisu potpuni, NE rusimo se i NE prepisujemo rezultat —
-    zadrzavamo jucerasnji usporedba.csv. Tako dnevni GitHub Actions posao prodje
-    bez greske, a stranica i dalje prikazuje zadnje valjane podatke.
-    """
+    # ako dnevni podaci nisu dobri, ne prepisujem stari rezultat nego ga zadrzim
     print(f"[UPOZORENJE] {razlog}")
     if os.path.exists(OUTPUT):
         print(f"Zadrzavam prethodni rezultat -> {OUTPUT}")
     else:
-        print("[NAPOMENA] Nema prethodnog usporedba.csv za zadrzati (prvo pokretanje?).")
+        print("[NAPOMENA] Nema prethodnog usporedba.csv za zadrzati.")
 
 
 def run():
     print("=== Preuzimanje cjenika ===")
     try:
-        inputs = fetch_today()  # [(putanja, kljuc), ...]
+        inputs = fetch_today()
     except Exception as exc:
         _keep_existing(f"Preuzimanje nije uspjelo: {exc}")
         return

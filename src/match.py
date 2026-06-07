@@ -1,22 +1,8 @@
-"""
-match.py
----------
-Spaja dva normalizirana lanca po BARKODU (egzaktan kljuc) i racuna razliku
-u cijeni. Barkod je pouzdan jer isti proizvod ima isti EAN u obje trgovine
-(provjereno: ~6880 zajednickih barkodova na uzorku).
-
-Naziv NE koristimo za spajanje (kratice/redoslijed se razlikuju) -- naziv
-ostaje samo za prikaz i za korisnicku trazilicu.
-"""
-
 import pandas as pd
 
 
 def match_by_barcode(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
-    """
-    df_a, df_b : dva normalizirana DataFramea (npr. Spar i Kaufland)
-    -> usporedna tablica: po jedan redak po zajednickom barkodu.
-    """
+    # spajam dva lanca po barkodu i racunam razliku u cijeni
     lanac_a = df_a["lanac"].iloc[0].lower()
     lanac_b = df_b["lanac"].iloc[0].lower()
 
@@ -24,7 +10,7 @@ def match_by_barcode(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
     a = df_a[keep].add_suffix(f"_{lanac_a}").rename(columns={f"barkod_{lanac_a}": "barkod"})
     b = df_b[keep].add_suffix(f"_{lanac_b}").rename(columns={f"barkod_{lanac_b}": "barkod"})
 
-    # ako lanac ima vise redaka s istim barkodom, uzmi najnizu cijenu
+    # ako se isti barkod ponovi, uzimam najnizu cijenu
     a = a.sort_values(f"cijena_{lanac_a}").drop_duplicates("barkod", keep="first")
     b = b.sort_values(f"cijena_{lanac_b}").drop_duplicates("barkod", keep="first")
 
@@ -32,7 +18,7 @@ def match_by_barcode(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
 
     ca, cb = f"cijena_{lanac_a}", f"cijena_{lanac_b}"
 
-    # sanity: ukloni parove s nevaljanim cijenama ili nemogucim omjerom
+    # izbacujem ocite greske u podacima (premale cijene i nerealan omjer)
     valid = (m[ca] > 0.05) & (m[cb] > 0.05)
     m = m[valid].copy()
     ratio = m[[ca, cb]].max(axis=1) / m[[ca, cb]].min(axis=1)
@@ -44,7 +30,6 @@ def match_by_barcode(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
         else (lanac_b if r[cb] < r[ca] else "isto"),
         axis=1,
     )
-    # postotna razlika u odnosu na jeftiniju cijenu
     m["razlika_posto"] = (
         (m[[ca, cb]].max(axis=1) - m[[ca, cb]].min(axis=1))
         / m[[ca, cb]].min(axis=1) * 100

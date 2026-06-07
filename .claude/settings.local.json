@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(pip show *)",
-      "Bash(python -m streamlit run app/app.py)"
+      "Bash(python -m streamlit run app/app.py)",
+      "Bash(git rm *)",
+      "Bash(rm CLAUDE.md)",
+      "Bash(python -m py_compile src/sources.py src/normalize.py src/match.py src/pipeline.py src/fetch.py app/app.py)",
+      "Bash(gh run *)",
+      "PowerShell($g = \\(Get-Command gh -ErrorAction SilentlyContinue\\); if \\($g\\) { $g.Source } else { \"gh not installed\" })"
     ]
   }
 }

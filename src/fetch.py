@@ -1,17 +1,3 @@
-"""
-fetch.py
---------
-Skida DANASNJE CSV-ove za Spar i Kaufland direktno po URL-u.
-Datum je ugraden u URL; samo zamijenimo danasnji datum.
-
-Kaufland URL obrazac (datum u dva mjesta):
-  - putanja:    /mpc_15_5/{m}_{Y}/{d}_{m}/        (bez vodecih nula)
-  - ime fajla:  ..._%20{DDMMYYYY}%20_7-30.csv     (s vodecim nulama)
-
-Spar URL obrazac:
-  - .../{fiksni_prefiks}_{YYYYMMDD}_0330.csv
-"""
-
 import os
 import datetime as dt
 
@@ -21,17 +7,15 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RAW_DIR = os.path.join(ROOT, "data", "raw")
 
 TIMEOUT = 30
-
 HEADERS = {"User-Agent": "Mozilla/5.0 (CjenikiBot/1.0)"}
 
-# ── Kaufland ──────────────────────────────────────────────────────────────────
+# Datum je dio URL-a pa ga svaki dan samo ubacim u predlozak.
 KAUFLAND_TMPL = (
     "https://www.kaufland.hr/content/dam/kaufland/global/article/hr_HR"
     "/download/document/mpc_15_5/{m}mj/{d}"
     "/Hipermarket_Svilajska_ulica_37_Osijek_6430_{DD}{MM}{Y}_7-30.csv"
 )
 
-# ── Spar ──────────────────────────────────────────────────────────────────────
 SPAR_TMPL = (
     "https://www.spar.hr/datoteke_cjenici"
     "/hipermarket_osijek_svilajska_31a_8725_interspar_8725_os_porta._0400_{YYYYMMDD}_0330.csv"
@@ -39,12 +23,13 @@ SPAR_TMPL = (
 
 
 def _kaufland_url(today: dt.date) -> str:
+    # Kaufland negdje koristi datum bez vodecih nula, a negdje s njima
     return KAUFLAND_TMPL.format(
-        m=today.month,            # bez vodece nule  (6)
-        d=today.day,              # bez vodece nule  (5)
-        Y=today.year,             # puna godina      (2026)
-        DD=f"{today.day:02d}",    # s vodecim nulom (05)
-        MM=f"{today.month:02d}",  # s vodecim nulom (06)
+        m=today.month,
+        d=today.day,
+        Y=today.year,
+        DD=f"{today.day:02d}",
+        MM=f"{today.month:02d}",
     )
 
 
@@ -62,10 +47,6 @@ def _download(url: str, dest: str) -> None:
 
 
 def fetch_today() -> list[tuple[str, str]]:
-    """
-    Preuzima danasnje CSV-ove i vraca [(putanja, kljuc_lanca), ...].
-    Preskace fajl ako vec postoji u data/raw/.
-    """
     today = dt.date.today()
     date_str = today.strftime("%Y%m%d")
     os.makedirs(RAW_DIR, exist_ok=True)

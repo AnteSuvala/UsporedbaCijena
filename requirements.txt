@@ -1,4 +1,4 @@
 pandas>=2.0
-rapidfuzz>=3.0        # fuzzy trazilica nad nazivima (korisnicki search)
-streamlit>=1.30      # web sloj (najlaksi za demo/host); alternativa: flask
-requests>=2.31       # za fetch.py (skidanje dnevnih CSV-ova)
+rapidfuzz>=3.0      # pretraga po nazivu
+streamlit>=1.30    # web sloj
+requests>=2.31     # skidanje cjenika u fetch.py
